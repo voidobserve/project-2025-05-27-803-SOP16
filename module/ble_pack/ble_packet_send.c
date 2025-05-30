@@ -372,6 +372,11 @@ void ble_packet_init()
 #endif
 }
 
+// #ifndef SYSTEM_NOT_SLEEP
+// // volatile uint8_t sys_sleep_enable = 0x0;
+// extern volatile uint32_t sys_sleep_count;
+// #endif
+
 uint8_t ble_packet_send()
 {
 	uint8_t ret = 0xFF;
@@ -385,6 +390,7 @@ uint8_t ble_packet_send()
 	uint8_t channel_switch = 0;
 
 	// hal_gpio_set_port(SINGLE_LED_GPIO_INDEX, GPIO_OUTPUT, 0x1); //  发送期间，点亮LED
+	// sys_sleep_count = 0; // 发送数据包，清空睡眠计时
 
 	// validation check,if group index get error,reset as master group index
 	// 检查有效性

@@ -117,7 +117,7 @@ void user_init(void)
 	hal_rtc_init();
 
 	// config unsleep
-	write_reg(TOP_POWER_CTRL_REG, 0x00);
+	write_reg(TOP_POWER_CTRL_REG, 0x00); // 需手动清除唤醒标志位，因为硬件不会自动清除
 	// off wakeup timer
 	wakeup_timer_disable();
 	wt_int_clear();
@@ -150,7 +150,7 @@ void user_init(void)
 
 	// key_process_init();
 	// memset(&key_info, 0x0, sizeof(str_key_info)); // 初始化存放按键信息的变量
-	ble_packet_init();							  //
+	ble_packet_init(); //
 
 	// peripherals enable
 #if ((PRODUCT_SELECTION & RCSCAN) == RCSCAN)
@@ -164,17 +164,13 @@ void user_init(void)
 	print("system up!\r\n");
 #endif
 
-	gpio_set_bit_direction(BIT1, GPIO_OUTPUT);
-	sys_set_port_mux(PAD_GPIO_01, PAD_MUX_FUNCTION_1); // TXD
+	// gpio_set_bit_direction(BIT1, GPIO_OUTPUT);
+	// sys_set_port_mux(PAD_GPIO_01, PAD_MUX_FUNCTION_1); // TXD
 
 	gpio_set_mode(BIT8, GPIO_PULL_UP); // 上拉
 	gpio_set_bit_direction(BIT8, GPIO_INPUT);
 	sys_set_port_mux(PAD_GPIO_08, PAD_MUX_FUNCTION_3); // 复用为 UART RXD
-	// gpio_set_mode(BIT4, GPIO_PULL_UP); // 上拉
-	// gpio_set_bit_direction(BIT4, GPIO_INPUT);
-	// sys_set_port_mux(PAD_GPIO_04, PAD_MUX_FUNCTION_5); // 复用为 UART RXD
 	uart_init(UART_BAUDRATE_115200);
-
 	int_enable_irq(INT_UART_EN_MASK); // 使能串口中断
 
 	// // 测试引脚配置：
@@ -184,13 +180,27 @@ void user_init(void)
 
 int main(void)
 {
-
 	// init sys
 	sys_init();
 	sys_set_clock(CPU_CLOCK_24M);
 	user_init();
 
-	my_printf("sys reset\n");
+	{
+		// u32 reg_value = 0;
+		// reg_value = read_reg(WAKEUP_SOURE_STATE); // 查询唤醒方式
+		// if (reg_value == WAKEUP_BY_WUT)			  // 判断是否为IO唤醒
+		// {
+		// 	my_printf("RESET WT\n");
+		// 	// my_printf("RESET WT\n");
+		// }
+		// else if (reg_value == WAKEUP_BY_FPO) // 判断是否为第一次上电启动
+		// {
+		// 	my_printf("RESET 1ST\n");
+		// 	// my_printf("RESET 1ST\n");
+		// }
+
+		// my_printf("sys reset\n");
+	}
 
 	while (1)
 	{
@@ -237,7 +247,7 @@ int main(void)
 			ble_adv_start();
 			ble_packet_send(); // 发送数据包
 
-			sys_sleep_count = 0;
+			sys_sleep_count = 0; // 有按键按下，清空睡眠计时
 		}
 
 		if (hal_clock_time_exceed_rtc(&rtc_adv_start_t, 10000)) // 10 ms扫描一次广播发送
@@ -250,31 +260,6 @@ int main(void)
 #if (SYS_CRASH_WTD_RESET_ENABLE)
 		wdg_feed_dog();
 #endif
-
-		// 5ms 扫描一次按键
-		// if (hal_clock_time_exceed_rtc(&rtc_rcscan_t, 5000))
-		// {
-		// rcscan_scan(); //
-		// }
-
-		// 		if (key_info.handle_flag) // 如果有按键事件需要处理
-		// 		{
-		// 			key_info.handle_flag = 0x0; // avoid reentry
-
-		// #ifndef SYSTEM_NOT_SLEEP
-		// 			sys_sleep_enable = 0;
-		// 			sys_sleep_count = 0;
-		// #endif
-		// 			key_process(key_info.curr_key, key_info.pressed_time);
-		// 		}
-
-		// 5ms 扫描一次广播发送
-		// if (hal_clock_time_exceed_rtc(&rtc_adv_start_t, 5000))
-		// // if (hal_clock_time_exceed_rtc(&rtc_adv_start_t, 10000)) // 10 ms扫描一次广播发送
-		// {
-		// 	// ble_packet_send(); // 直接发送数据包
-		// 	ble_adv_start();
-		// }
 
 #ifndef SYSTEM_NOT_SLEEP
 		// 5ms累计一次休眠倒计时
@@ -296,7 +281,7 @@ int main(void)
 			sys_sleep_count = 0;
 			sys_sleep_enable = 0;
 
-			my_printf("enter sleep\r\n");
+			// my_printf("enter sleep\r\n");
 #if LOG_MAJOR
 			print("enter sleep\r\n");
 #endif
@@ -304,36 +289,118 @@ int main(void)
 			// hal_gpio_cfg_before_sleep(UNUSED_IO);
 
 			// RETENTION_MEMEORY_ADDR 地址是不连续，偏移地址为0x4N，且必须以字节方式操作
-			uint8_t *p_retmem = (uint8_t *)&ret_mem_data;
-			for (uint8_t i = 0; i < 16; i++)
-			{
-				*((volatile uint32_t *)(RETENTION_MEMEORY_ADDR + (i << 2))) = p_retmem[i];
-			}
+			// uint8_t *p_retmem = (uint8_t *)&ret_mem_data;
+			// for (uint8_t i = 0; i < 16; i++)
+			// {
+			// 	*((volatile uint32_t *)(RETENTION_MEMEORY_ADDR + (i << 2))) = p_retmem[i];
+			// }
 
-			// 配置唤醒引脚
-			// wakeup_timer_init(WAKEUP_IO, 0x1, 0x0, 0x1); // 上拉，低电平唤醒
-
-#if (SYS_CRASH_WTD_RESET_ENABLE)
-			// disable wtd
-			// wdg_int_clear();
-			// wdg_feed_dog();
-			// watchdog_disable();
+#if (SYS_CRASH_WTD_RESET_ENABLE) // 关闭看门狗：
+								 //  disable wtd
+			wdg_int_clear();
+			wdg_feed_dog();
+			watchdog_disable();
 #endif
 
-			// hal_gpio_set_port(SINGLE_LED_GPIO_INDEX,GPIO_INPUT, 0); // 输入上拉
-			// 配置LED端口为输入下拉
-			// sys_set_port_mux(PAD_MUX_BASE_ADDR + (SINGLE_LED_GPIO_INDEX << 2), (PAD_MUX_FUNCTION_0 | 0x01)); // 功能--作为GPIO，使能下拉，禁止上拉
-			// gpio_set_bit_direction(1 << SINGLE_LED_GPIO_INDEX, GPIO_INPUT);									 // 输入模式
+			hal_gpio_cfg_before_sleep(~(BIT8)); // 配置其它不作为唤醒的IO为debug模式，必须
+			// 配置唤醒引脚
+			sys_soft_reset(UART_SOFT_RESET_MASK);
+			sys_set_module_clock(CLK_UART_EN_MASK, OFF);	   // 关闭串口时钟
+			int_disable_irq(INT_UART_EN_MASK); // 不使能串口中断
+			sys_set_port_mux(PAD_GPIO_08, PAD_MUX_FUNCTION_0); // 复用为IO
+			gpio_set_mode(BIT8, GPIO_PULL_UP);				   // 上拉
+			gpio_set_bit_direction(BIT8, GPIO_INPUT);
+
+			// 配置为IO中断，但是不能唤醒CPU
+			// gpio_set_irq_type(GPIO_EDGE_SENSITIVE, BIT8);			// 配置为边沿产生中断
+			// gpio_set_int_polarity(GPIO_LOW_LEVEL_OR_FALLING_EDGE, BIT8); // 配置为下降沿产生中断
+			// gpio_enable_irq(BIT8);									// 使能中断
+			// gpio_clear_irq(BIT8);									// 为防止使能后马上进入中断，应先清除中断标志
+			// int_enable_irq(INT_GPIO_EN_MASK);						// 使能GPIO中断
+
+			wakeup_timer_init(BIT8, 0x1, 0x0, 0x1); // 上拉，低电平唤醒
+			{
+				// sys_soft_reset(UART_SOFT_RESET_MASK);
+				// sys_set_module_clock(CLK_UART_EN_MASK, OFF); // 关闭串口时钟
+				// gpio_set_mode(BIT8, GPIO_PULL_UP);			 // 上拉
+				// gpio_set_bit_direction(BIT8, GPIO_INPUT);
+				// sys_set_port_mux(PAD_GPIO_08, PAD_MUX_FUNCTION_0); // 复用为IO
+				// // bug fixed,flege add at 20200602
+				// wt_soft_reset();
+
+				// wt_input_enable(BIT8);			 // INPUT_EN, in[bit]
+				// set_wt_compare_val(EVENT_COUNT); // COUNTER
+				// wt_int_enable();				 // INT_EN
+
+				// // /*set wakeup level,hight/low level*/
+				// // if (wakeup_level)
+				// // {
+				// // 	wakeup_level_bits = reg_bits;
+				// // }
+
+				// wt_pol_set(0); // 极性设置为低电平，低电平触发唤醒
+
+				// /*set pull enable*/
+				// // loopback_pull_en = 0x01 << pull_en;
+
+				// /*set debounce time*/
+				// set_debounce(1); // DEBOUNCE
+
+				// /*wakeup io fuction config and io pullup*/
+				// // for (int8_t i = 0; i < GPIO_MAX_NUM; i++)
+				// {
+				// 	// if (reg_bits & (0x01 << i))
+				// 	{
+				// 		sys_set_port_mux(PAD_GPIO_08, PAD_MUX_FUNCTION_6);
+				// 	}
+				// }
+
+				// wakeup_timer_enable(); // enable wakeup timer module
+			}
+
+			// {
+			// 	/* Reset UART module */
+			// 	sys_soft_reset(UART_SOFT_RESET_MASK);
+			// 	sys_set_module_clock(CLK_UART_EN_MASK, OFF); // 关闭串口时钟
+			// 	gpio_set_mode(BIT8, GPIO_PULL_UP);			 // 上拉
+			// 	gpio_set_bit_direction(BIT8, GPIO_INPUT);
+			// 	sys_set_port_mux(PAD_GPIO_08, PAD_MUX_FUNCTION_0); // 复用为IO
+			// 	// hal_gpio_cfg_before_sleep(~(BIT8));				   // 配置其它不作为唤醒的IO为debug模式，必须
+			// 	wakeup_timer_init(BIT8, 0x1, 0x0, 0x0);			   // 配置为唤醒IO，上拉，低电平唤醒，不进行电平防抖
+			// 	wakeup_timer_init(BIT0, 0x1, 0x0, 0x0);			   // 配置为唤醒IO，上拉，低电平唤醒，不进行电平防抖
+			// 													   // wakeup_timer_init(BIT8, 0x0, 0x0, 0x0);
+			// }
 
 			// 进入休眠，唤醒是重新跑main函数的
 			sys_sleep_down();
 
 			// 必须要延时10ms
+			// 当 MCU 从休眠态被唤醒时，需要等待一个振荡稳定时间（ Reset Time） ,这个时间标称值为 5ms。
+			// delay_ms(10);
+			delay_ms(5);
 
-			delay_ms(10);
+			// init io
+			// 			hal_gpio_init(); // 打开GPIO时钟
+			// 			// hal_gpio_set_port(SINGLE_LED_GPIO_INDEX,GPIO_OUTPUT, GPIO_HIGH); // 不能设置为高电平，在不按遥控器时，灯会一直闪
+
+			// 			// init rtc
+			// 			hal_rtc_init();
+
+			// 			// config unsleep
+			// 			write_reg(TOP_POWER_CTRL_REG, 0x00);
+			// 			// off wakeup timer
+			// 			wakeup_timer_disable();
+			// 			wt_int_clear();
+
+			// #if (SYS_CRASH_WTD_RESET_ENABLE)
+			// 			// init watch dog
+			// 			wdg_int_clear();
+			// 			wdg_feed_dog();
+			// 			watchdog_init(WATCH_DOG_RESET_TIME);
+			// #endif
 
 			user_init();
-			my_printf("unsleep\r\n");
+			// my_printf("unsleep\r\n");
 #if LOG_ERROR
 			print("unsleep\n");
 #endif

@@ -127,6 +127,8 @@ ATTRIBUTE_ISR void uart_isr(void)
         static u8 uart_recv_cnt = 0;
         uint8_t data = uart_getc();
 
+        sys_sleep_count = 0; // 串口收到信息，清空睡眠计时
+
         // 未收到数据，准备接收格式头
         if (UART_RECV_STATUS_NONE == uart_recv_status)
         {

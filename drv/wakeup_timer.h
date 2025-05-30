@@ -19,7 +19,8 @@
 
 
 #define DEBOUNCE_TIME	(0xA)
-#define EVENT_COUNT		(0xA)
+// #define EVENT_COUNT		(0xA)
+#define EVENT_COUNT		(0x01)
 
 #define WAKWUP_TIMER_BASE_ADDR				(0x40100000)
 #define WT_CTL 								(0x40100000)
