@@ -208,7 +208,12 @@ void timer2_clear_int(void)
     read_reg(TIMER2_EOI);
 }
 
-
+/**
+ * @brief 
+ * 
+ * @param  clk_sel timer_clock_e
+ * @param timer_load_count 
+ */
 void timer0_init(uint8_t clk_sel,uint32_t timer_load_count)
 {
 	timer_clk_config(TIMER0, clk_sel);

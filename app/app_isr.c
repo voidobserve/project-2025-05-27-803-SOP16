@@ -17,6 +17,7 @@
 #include "key_process.h"
 
 #include "user_config.h"
+#include "user_key.h"
 
 #ifndef SYSTEM_NOT_SLEEP
 extern volatile uint8_t sys_sleep_enable;
@@ -37,9 +38,23 @@ ATTRIBUTE_ISR void gpio_isr()
 
 ATTRIBUTE_ISR void timer0_isr()
 {
+    // static u8 cnt = 0;
+
     if (read_reg(TIMER0_INT_STATUS))
     {
         read_reg(TIMER0_EOI); // read clear
+
+        if (touch_key_para.cur_scan_times < 255)
+        {
+            touch_key_para.cur_scan_times++;
+        }
+
+        // cnt++;
+        // if (cnt >= 100)
+        // {
+        //     cnt = 0;
+        //     my_printf("timer isr\n");
+        // }
     }
 }
 
@@ -159,6 +174,7 @@ ATTRIBUTE_ISR void uart_isr(void)
                 uart_recv_key_val = (u16)uart_recv_buf[0] << 8 |
                                     (u16)uart_recv_buf[1] << 0;
                 uart_recv_status = UART_RECV_STATUS_NONE;
+                flag_is_recv_uart = 1; // 表示收到了数据
             }
         }
     }

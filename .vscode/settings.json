@@ -17,7 +17,8 @@
         "sys.h": "c",
         "user_config.h": "c",
         "type.h": "c",
-        "user_instruction.h": "c"
+        "user_instruction.h": "c",
+        "user_key.h": "c"
     },
     
     "clangd.checkUpdates": true,
