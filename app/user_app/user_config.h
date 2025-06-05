@@ -6,6 +6,13 @@
 #include "type.h"
 #include "config.h"
 
+#include "key_driver.h"
+#include "user_key.h"
+
+// #include <stdio.h>
+
+#define ARRAY_SIZE(array) (sizeof(array)/sizeof(array[0]))
+
 #define FORMAT_HEAD_INDEPENDENT_BUTTON (0x52) // 独立触摸按键的格式头
 #define FORMAT_HEAD_CIRCULAR_BUTTONS (0x51)
 

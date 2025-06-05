@@ -54,6 +54,8 @@
 #define BB_CHANNEL_0_PKG_LEN_MODE           BB_PACK_LEN_AUTO        // RX payload length got from package.
 #define BB_CHANNEL_1_PKG_LEN_MODE           BB_PACK_LEN_AUTO        // RX payload length got from package.
 #define BB_CHANNEL_0_PKG_LEN                (31)
+// #define BB_CHANNEL_0_PKG_LEN                (21)
+// #define BB_CHANNEL_0_PKG_LEN                (5)
 #define BB_CHANNEL_1_PKG_LEN                (37)
 
 #define BB_CHANNEL_NUMB                     (37)

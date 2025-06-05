@@ -20,6 +20,8 @@
 #include "uart.h"
 #include "sys.h"
 
+// #include <stdio.h>
+
 // #include "user_config.h"
 
 volatile u8 uart_recv_buf[20] = {0};
@@ -29,20 +31,19 @@ volatile u16 uart_recv_key_val = 0; // 存放接收到的按键键值
 // 重写putchar()函数
 extern void uart_putc(uint8_t c); // 函数声明
 
-#include <stdio.h>
+// #include <stdio.h>
 #include <stdarg.h>
 #include "uart.h"
 
 /* Macro --------------------------------------------------------*/
 
-// #define putchar     uart_putc
+#define putchar     uart_putc
 
 #ifdef fputc
 #undef fputc
 #define fputc uart_putc
 #endif
-
-#define putchar uart_putc
+ 
 
 /* Global Variables ---------------------------------------------*/
 
@@ -58,6 +59,16 @@ void printHex(unsigned hex);
 void printAddr(unsigned long addr);
 void printStr(char *str);
 void printFloat(double f);
+
+// extern char fputc(char c);
+// int fputc(char c)
+// int putchar(int ch)
+// {
+//     while ((read_reg(UART_STATE_REG) & UART_TX_BUF_FULL_MASK))
+//         ;
+//     write_reg(BB_UART_DATA_REG, ch);
+//     return ch;
+// }
 
 void my_printf(char *s, ...)
 {
@@ -95,7 +106,7 @@ void my_printf(char *s, ...)
             // printFloat(va_arg(va_ptr, double));
             break;
         case 's':
-           printStr(va_arg(va_ptr, char *));
+            printStr(va_arg(va_ptr, char *));
             break;
         default:
             break;

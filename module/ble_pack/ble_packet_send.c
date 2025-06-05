@@ -380,12 +380,15 @@ void ble_packet_init()
 uint8_t ble_packet_send()
 {
 	uint8_t ret = 0xFF;
-	uint8_t encoded_data[31];
+	uint8_t encoded_data[31]; // 存放最终编码好的数据
+	// uint8_t encoded_data[BLE_ADV_PDU_MAX_LENGTH];
+	// uint8_t encoded_data[18];
+	
 	uint8_t encoded_data_len;
 	uint8_t index = 0x0;
 	uint8_t *group_index = &ret_mem_data.current_group_index;
 	uint16_t rand_seed = ret_mem_data.rand_seed;
-	uint16_t tx_count = ret_mem_data.tx_count++;
+	// uint16_t tx_count = ret_mem_data.tx_count++;
 	// uint16_t tx_count = ret_mem_data.tx_count;
 	uint8_t channel_switch = 0;
 
@@ -399,7 +402,7 @@ uint8_t ble_packet_send()
 #if ((BLE_ENCODER_VERSION & BLE_ENCODER_VIOT) == BLE_ENCODER_VIOT)
 	ble_viot_para.type = 0x00;
 	ble_viot_para.version = 0x00;
-	ble_viot_para.count = tx_count; // count increace
+	// ble_viot_para.count = tx_count; // count increace
 	ble_viot_para.addr = GROUP_ADDR;
 	ble_viot_para.group_index = *group_index;
 

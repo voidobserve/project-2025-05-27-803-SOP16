@@ -8,7 +8,7 @@
     触摸按键的扫描周期，单位：ms
     用在定时器中断，注意不能超过变量的最大值
 */
-#define TOUCH_KEY_SCAN_CIRCLE_TIMES (20)
+#define TOUCH_KEY_SCAN_CIRCLE_TIMES (50) 
 #define TOUCH_KEY_FILTER_TIMES (0)         // 触摸按键消抖次数
 #define LONG_PRESS_TIME_THRESHOLD_MS (500) // 长按时间阈值（单位：ms）
 #define HOLD_PRESS_TIME_THRESHOLD_MS (150) // 长按持续(不松手)的时间阈值(单位：ms)，每隔 xx 时间认为有一次长按持续事件

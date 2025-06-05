@@ -38,23 +38,15 @@ ATTRIBUTE_ISR void gpio_isr()
 
 ATTRIBUTE_ISR void timer0_isr()
 {
-    // static u8 cnt = 0;
-
     if (read_reg(TIMER0_INT_STATUS))
     {
         read_reg(TIMER0_EOI); // read clear
 
-        if (touch_key_para.cur_scan_times < 255)
+        // 更新扫描时间：
+        if (touch_key_para.cur_scan_times < 255)  // 已经验证过这里是1ms进入一次
         {
-            touch_key_para.cur_scan_times++;
+            touch_key_para.cur_scan_times++; 
         }
-
-        // cnt++;
-        // if (cnt >= 100)
-        // {
-        //     cnt = 0;
-        //     my_printf("timer isr\n");
-        // }
     }
 }
 
@@ -125,11 +117,6 @@ enum
 ATTRIBUTE_ISR void uart_isr(void)
 {
     u32 reg_val = 0;
-    // u8 reg_val = 0;
-
-    //    uart_putc(aa + 1);  temp test code.
-    // my_printf("recv\n");
-    // my_printf("%c\n", uart_getc());
 
 #if 1
     /*RX interrupt */

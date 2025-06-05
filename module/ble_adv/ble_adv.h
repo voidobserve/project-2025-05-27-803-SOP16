@@ -20,7 +20,8 @@
 #define ADV_FIFO_MAX_NUM										(0x01)
 #endif
 
-#define BLE_ADV_PAYLOAD_MAX_LENGTH								(39)//include ble header[2],adva[6],advdata[31]
+#define BLE_ADV_PAYLOAD_MAX_LENGTH								(39) //include ble header[2],adva[6],advdata[31]
+// #define BLE_ADV_PAYLOAD_MAX_LENGTH								(21) //include ble header[2],adva[6],advdata[13]
 
 #define SEND_ADV_TIMER_IRQ_MIN_INTERVAL							(5)//unit:ms
 #define HW_TX_BUFFER_ADDR										(BB_MEMEORY_ADDR)

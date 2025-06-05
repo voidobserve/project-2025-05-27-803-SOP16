@@ -10,8 +10,12 @@
 #include "string.h"
 #include "stdlib.h"
 
-#define BLE_ADV_PDU_MAX_LENGTH (13)
-#define ADV_COMPID (0x55AA)
+#define BLE_ADV_PDU_MAX_LENGTH (31)
+// #define BLE_ADV_PDU_MAX_LENGTH (18) // 发送长度不变
+// #define ADV_COMPID (0xAA55)
+#define ADV_COMPID (0x55AA) // 定义，但是不使用
+
+#define FORMAT_HEAD (0x55AA) // 自定义格式头，MSB
 
 const uint8_t encodetable[] = {0x41, 0x92, 0x53, 0x2A, 0xFC, 0xAB, 0xCE, 0x26, 0x0D, 0x1E, 0x99, 0x78, 0x00, 0x22, 0x99, 0xDE};
 
@@ -67,10 +71,10 @@ uint8_t ble_viot_encoder(str_ble_viot_para *opcode_para, uint8_t rand_seed, uint
 	uint16_t crc;
 
 	// validation check
-	if (opcode_para == 0x0)
-	{
-		return 0xF1;
-	}
+	// if (opcode_para == 0x0)
+	// {
+	// 	return 0xF1;
+	// }
 
 	if (out_data == 0x0)
 	{
@@ -82,23 +86,24 @@ uint8_t ble_viot_encoder(str_ble_viot_para *opcode_para, uint8_t rand_seed, uint
 	*p_ble_payload++ = 0x02;
 
 	// ad structure 2
-	*p_ble_payload++ = 0x1B;
+	// *p_ble_payload++ = 0x1B;
+	// *p_ble_payload++ = 0x10;
+	*p_ble_payload++ = 0x0E; // 存放数据包长度
 	*p_ble_payload++ = 0x03;
-	*p_ble_payload++ = ADV_COMPID & 0xFF; // 格式头
-	*p_ble_payload++ = ADV_COMPID >> 8;
+	*p_ble_payload++ = FORMAT_HEAD >> 8; // 格式头
+	*p_ble_payload++ = FORMAT_HEAD & 0xFF;
 
-	*p_ble_payload++ = 0x00; // R
-	*p_ble_payload++ = 0x00; // G
-	*p_ble_payload++ = 0x00; // B
-	*p_ble_payload++ = 0x19; // C
-	*p_ble_payload++ = 0x19; // W
-	*p_ble_payload++ = 0xC0; // 客户码，固定
-	*p_ble_payload++ = 0x81; // 客户码，固定
-	*p_ble_payload++ = 0x06; // 客户码，固定
-	*p_ble_payload++ = 0x19; // 键值
-	*p_ble_payload++ = 0x01; // 连续码，短按为0，长按和HOLD为1
-	*p_ble_payload++ = 0x00; // CRC
-	
+	*p_ble_payload++ = 0x00;				 // R
+	*p_ble_payload++ = 0x00;				 // G
+	*p_ble_payload++ = 0x00;				 // B
+	*p_ble_payload++ = 0x00;				 // C
+	*p_ble_payload++ = 0x00;				 // W
+	*p_ble_payload++ = 0xC0;				 // 客户码，固定
+	*p_ble_payload++ = 0x81;				 // 客户码，固定
+	*p_ble_payload++ = 0x06;				 // 客户码，固定
+	*p_ble_payload++ = opcode_para->para[0]; // 键值
+	*p_ble_payload++ = opcode_para->para[1]; // 连续码，短按为0，长按和HOLD为1
+	*p_ble_payload++ = 0x00;				 // CRC
 
 	// *p_ble_payload++ = opcode_para->para[0];	 // 按键键值
 	// *p_ble_payload++ = opcode_para->para[1];	 // 按键键值

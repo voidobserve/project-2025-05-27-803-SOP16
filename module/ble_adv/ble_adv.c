@@ -73,9 +73,20 @@ send_adv_label:
 
 		// update tx length
 		rf_set_tx_len(adv_fifo[i].adv_payload_len - 2);
+		// my_printf("rf_set_tx_len: %d\n", adv_fifo[i].adv_payload_len - 2);
+		// rf_set_tx_len(adv_fifo[i].adv_payload_len - 2 - 13); // 使用这个，接收端不会打印出数据
 
 		// update tx buffer
 		memcpy_byte(send_buff, &adv_fifo[i].adv_payload, adv_fifo[i].adv_payload_len);
+		// send_buff[1]-=11;
+		// my_printf("adv_fifo[i].adv_payload_len %d\n", (int16_t)adv_fifo[i].adv_payload_len); // 
+
+		// my_printf("[%d]LEN:%d,HWBUFFER:", i, adv_fifo[i].adv_payload_len); // 
+		// for (uint8_t j = 0; j < adv_fifo[i].adv_payload_len; j++)
+		// {
+		// 		my_printf("%x ", send_buff[j]);
+		// }
+		// my_printf("\n");
 #if LOG_DETAIL
 		print("[%d]LEN:%d,HWBUFFER:", i, adv_fifo[i].adv_payload_len);
 		for (uint8_t j = 0; j < adv_fifo[i].adv_payload_len; j++)
@@ -166,7 +177,8 @@ void ble_adv_send(uint8_t type, const uint8_t *data, uint8_t data_len, uint16_t 
 	// timer1_disable();
 
 	// refill the same type adv
-	adv_fifo[type].adv_payload_len = data_len + 8;
+	adv_fifo[type].adv_payload_len = data_len + 8; // include ble header[2], adva[6]
+	// adv_fifo[type].adv_payload_len = data_len;
 	adv_fifo[type].interval = interval_ms;
 	adv_fifo[type].tx_left_count = tx_num;
 
@@ -179,7 +191,7 @@ void ble_adv_send(uint8_t type, const uint8_t *data, uint8_t data_len, uint16_t 
 	send_buff[0] = BLE_ADV_RX_ADDR_FLAG | BLE_ADV_TX_ADDR_FLAG | BLE_ADV_PDU_TYPE;
 	send_buff[1] = 6 + data_len; // length:BLE4.1[5:0];BLE4.2/BLE5.x[7:0]
 
-	/*2.Build BLE Mac*/
+	/*2.Build BLE Mac*/ // 字节地址
 	memcpy(send_buff + 2, DEFAULT_BLE_MAC, 6);
 
 #if LOG_SECONDARY
@@ -203,6 +215,13 @@ void ble_adv_send(uint8_t type, const uint8_t *data, uint8_t data_len, uint16_t 
 	}
 	print("\n");
 #endif
+
+	// my_printf("build ble[%d]:", adv_fifo[type].tx_left_count);
+	// for (uint8_t i = 0; i < adv_fifo[type].adv_payload_len; i++)
+	// {
+	// 	my_printf("%x ", adv_fifo[type].adv_payload[i]);
+	// }
+	// my_printf("\n");
 
 	// adv start send
 	adv_start_send_flag = 0x01;

@@ -36,6 +36,8 @@
 #include "hal_rtc.h"
 #include "ble_adv.h"
 
+#include "user_config.h"
+
 /* Macro --------------------------------------------------------*/
 
 /* Global Variables ---------------------------------------------*/
@@ -168,8 +170,8 @@ void user_init(void)
 #endif
 
 // MY_DEBUG:
-	gpio_set_bit_direction(BIT1, GPIO_OUTPUT);
-	sys_set_port_mux(PAD_GPIO_01, PAD_MUX_FUNCTION_1); // TXD
+	// gpio_set_bit_direction(BIT1, GPIO_OUTPUT);
+	// sys_set_port_mux(PAD_GPIO_01, PAD_MUX_FUNCTION_1); // TXD
 
 	gpio_set_mode(BIT8, GPIO_PULL_UP); // 上拉
 	gpio_set_bit_direction(BIT8, GPIO_INPUT);
@@ -192,22 +194,22 @@ int main(void)
 	user_init();
 
 // MY_DEBUG:
-	{
-		u32 reg_value = 0;
-		reg_value = read_reg(WAKEUP_SOURE_STATE); // 查询唤醒方式
-		if (reg_value == WAKEUP_BY_WUT)			  // 判断是否为IO唤醒
-		{
-			my_printf("RESET WT\n");
-			// my_printf("RESET WT\n");
-		}
-		else if (reg_value == WAKEUP_BY_FPO) // 判断是否为第一次上电启动
-		{
-			my_printf("RESET 1ST\n");
-			// my_printf("RESET 1ST\n");
-		}
+	// {
+	// 	u32 reg_value = 0;
+	// 	reg_value = read_reg(WAKEUP_SOURE_STATE); // 查询唤醒方式
+	// 	if (reg_value == WAKEUP_BY_WUT)			  // 判断是否为IO唤醒
+	// 	{
+	// 		my_printf("RESET WT\n");
+	// 		// my_printf("RESET WT\n");
+	// 	}
+	// 	else if (reg_value == WAKEUP_BY_FPO) // 判断是否为第一次上电启动
+	// 	{
+	// 		my_printf("RESET 1ST\n");
+	// 		// my_printf("RESET 1ST\n");
+	// 	}
 
-		my_printf("sys reset\n");
-	}
+	// 	my_printf("sys reset\n");
+	// }
 
 	while (1)
 	{
@@ -263,6 +265,9 @@ int main(void)
 		// 	sys_sleep_count = 0; // 有按键按下，清空睡眠计时
 		// }
 
+		key_driver_scan((void *)&touch_key_para);
+		touch_key_handle();
+
 		if (hal_clock_time_exceed_rtc(&rtc_adv_start_t, 10000)) // 10 ms扫描一次广播发送
 		{
 			ble_adv_start();
@@ -283,7 +288,7 @@ int main(void)
 			if (sys_sleep_count >= SYS_SLEEP_TIME_MS)
 			{
 // MY_DEBUG:
-				// sys_sleep_enable = 1;
+				sys_sleep_enable = 1;
 
 				sys_sleep_count = 0;
 			}
