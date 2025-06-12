@@ -106,6 +106,8 @@ volatile struct key_driver_para touch_key_para = {
     KEY_EVENT_NONE,
 };
 
+// 存放色环按键对应的数据（0x00~0xFF）
+// volatile u8 latest_key_data = 0;
 u8 touch_key_get_key_id(void)
 {
     u8 key_val = NO_KEY;
@@ -116,6 +118,7 @@ u8 touch_key_get_key_id(void)
         {
             // 如果是圆环按键
             key_val = TOUCH_KEY_ID_10;
+            touch_key_para.latest_key_data = (u8)(uart_recv_key_val & 0xFF);
         }
         else if (FORMAT_HEAD_INDEPENDENT_BUTTON == (uart_recv_key_val >> 8))
         {
@@ -177,19 +180,44 @@ void __user_ble_packet_send(u8 cur_key_val, u8 is_hold)
 {
     ble_viot_para.para[0] = cur_key_val; // 存放键值
     ble_viot_para.para[1] = is_hold;     // 表示短按，在 ble_viot_encoder() 中作为数据包的数据
+
     ble_adv_start();
     ble_packet_send(); // 发送数据包
 }
 
+extern str_retention_memory ret_mem_data;
 void touch_key_handle(void)
 {
     u8 touch_key_event = TOUCH_KEY_EVENT_NONE;
     u8 cur_key_val = touch_key_para.latest_key_val; // 存放当前的键值
+    static volatile u8 tx_count = 0;                         // 动态码
 
+    // 没有按键按下，返回
     if (touch_key_para.latest_key_val == TOUCH_KEY_ID_NONE)
     {
-
         return;
+    }
+
+    // 如果是色环按下:
+    if (TOUCH_KEY_ID_10 == touch_key_para.latest_key_val)
+    {
+        convert_key_val_to_rgb(touch_key_para.latest_key_data);
+    }
+
+    if (KEY_EVENT_CLICK == touch_key_para.latest_key_event ||
+        KEY_EVENT_LONG == touch_key_para.latest_key_event)
+    {
+        // 如果有短按/长按事件
+        if (0xFF == tx_count) // 如果已经累加到0xFF，清零
+        {
+            tx_count = 0;
+        }
+        else
+        {
+            tx_count++;
+        }
+
+        ble_viot_para.count = tx_count;
     }
 
     touch_key_event = __touch_key_get_event(touch_key_para.latest_key_val, touch_key_para.latest_key_event);
@@ -205,7 +233,6 @@ void touch_key_handle(void)
         // ble_viot_para.para[1] = 0x00;        // 表示短按，在 ble_viot_encoder() 中作为数据包的数据
         // ble_adv_start();
         // ble_packet_send(); // 发送数据包
-
         __user_ble_packet_send(cur_key_val, 0x00);
 
         break;
@@ -279,6 +306,15 @@ void touch_key_handle(void)
         break;
 
     case TOUCH_KEY_EVENT_ID_9_CLICK:
+        if (CUR_SEL_RGB_MODE == ret_mem_data.current_rgb_mode)
+        {
+            ret_mem_data.current_rgb_mode = CUR_SEL_CW_MODE;
+        }
+        else
+        {
+            ret_mem_data.current_rgb_mode = CUR_SEL_RGB_MODE;
+        }
+
         __user_ble_packet_send(cur_key_val, 0x00);
         break;
     case TOUCH_KEY_EVENT_ID_9_HOLD:

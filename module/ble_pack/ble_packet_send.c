@@ -388,7 +388,7 @@ uint8_t ble_packet_send()
 	uint8_t index = 0x0;
 	uint8_t *group_index = &ret_mem_data.current_group_index;
 	uint16_t rand_seed = ret_mem_data.rand_seed;
-	// uint16_t tx_count = ret_mem_data.tx_count++;
+	// uint16_t tx_count = ret_mem_data.tx_count++; // 每次发送加一
 	// uint16_t tx_count = ret_mem_data.tx_count;
 	uint8_t channel_switch = 0;
 

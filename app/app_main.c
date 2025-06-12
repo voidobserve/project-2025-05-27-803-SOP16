@@ -53,7 +53,6 @@
 
 volatile u8 flag_is_recv_uart = 0;
 
-
 #ifndef SYSTEM_NOT_SLEEP
 volatile uint8_t sys_sleep_enable = 0x0;
 volatile uint32_t sys_sleep_count = 0x0;
@@ -169,7 +168,7 @@ void user_init(void)
 	print("system up!\r\n");
 #endif
 
-// MY_DEBUG:
+	// MY_DEBUG:
 	// gpio_set_bit_direction(BIT1, GPIO_OUTPUT);
 	// sys_set_port_mux(PAD_GPIO_01, PAD_MUX_FUNCTION_1); // TXD
 
@@ -184,6 +183,9 @@ void user_init(void)
 	// // 测试引脚配置：
 	// gpio_set_mode(BIT0, GPIO_PULL_UP); // 上拉
 	// gpio_set_bit_direction(BIT0, GPIO_INPUT);
+
+	// 上电后读取当前 cur_sel_rgb_cw_mode 的状态
+	cur_sel_rgb_cw_mode = *((volatile uint32_t *)(RETENTION_MEMEORY_ADDR));
 }
 
 int main(void)
@@ -193,7 +195,7 @@ int main(void)
 	sys_set_clock(CPU_CLOCK_24M);
 	user_init();
 
-// MY_DEBUG:
+	// MY_DEBUG:
 	// {
 	// 	u32 reg_value = 0;
 	// 	reg_value = read_reg(WAKEUP_SOURE_STATE); // 查询唤醒方式
@@ -287,7 +289,7 @@ int main(void)
 
 			if (sys_sleep_count >= SYS_SLEEP_TIME_MS)
 			{
-// MY_DEBUG:
+				// MY_DEBUG:
 				sys_sleep_enable = 1;
 
 				sys_sleep_count = 0;
@@ -307,15 +309,18 @@ int main(void)
 			// config not wakeup io as output low,for power saving
 			// hal_gpio_cfg_before_sleep(UNUSED_IO);
 
+			// 休眠前，写入 current_rgb_mode 的状态：
 			// RETENTION_MEMEORY_ADDR 地址是不连续，偏移地址为0x4N，且必须以字节方式操作
-			// uint8_t *p_retmem = (uint8_t *)&ret_mem_data;
-			// for (uint8_t i = 0; i < 16; i++)
-			// {
-			// 	*((volatile uint32_t *)(RETENTION_MEMEORY_ADDR + (i << 2))) = p_retmem[i];
-			// }
+			uint8_t *p_retmem = (uint8_t *)&ret_mem_data;
+			for (uint8_t i = 0; i < 16; i++)
+			{
+				*((volatile uint32_t *)(RETENTION_MEMEORY_ADDR + (i << 2))) = p_retmem[i];
+			}
 
-#if (SYS_CRASH_WTD_RESET_ENABLE) // 关闭看门狗：
-								 //  disable wtd
+			// *((volatile uint32_t *)(RETENTION_MEMEORY_ADDR)) = cur_sel_rgb_cw_mode;
+
+#if (SYS_CRASH_WTD_RESET_ENABLE) // 关闭看门狗： //  disable wtd
+								
 			wdg_int_clear();
 			wdg_feed_dog();
 			watchdog_disable();

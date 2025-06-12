@@ -18,7 +18,8 @@
         "user_config.h": "c",
         "type.h": "c",
         "user_instruction.h": "c",
-        "user_key.h": "c"
+        "user_key.h": "c",
+        "rgb_convert.h": "c"
     },
     
     "clangd.checkUpdates": true,

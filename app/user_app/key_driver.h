@@ -53,6 +53,9 @@ typedef struct key_driver_para
     // 存放得到的按键键值和按键事件
     volatile u8 latest_key_val;
     volatile u8 latest_key_event;
+
+    // 存放色环按键数据
+    volatile u8 latest_key_data;
 } key_driver_para_t;
 
 extern void key_driver_scan(void *_scan_para);

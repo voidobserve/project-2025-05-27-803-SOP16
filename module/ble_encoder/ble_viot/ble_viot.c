@@ -10,6 +10,8 @@
 #include "string.h"
 #include "stdlib.h"
 
+#include "rgb_convert.h"
+
 #define BLE_ADV_PDU_MAX_LENGTH (31)
 // #define BLE_ADV_PDU_MAX_LENGTH (18) // 发送长度不变
 // #define ADV_COMPID (0xAA55)
@@ -93,11 +95,11 @@ uint8_t ble_viot_encoder(str_ble_viot_para *opcode_para, uint8_t rand_seed, uint
 	*p_ble_payload++ = FORMAT_HEAD >> 8; // 格式头
 	*p_ble_payload++ = FORMAT_HEAD & 0xFF;
 
-	*p_ble_payload++ = 0x00;				 // R
-	*p_ble_payload++ = 0x00;				 // G
-	*p_ble_payload++ = 0x00;				 // B
-	*p_ble_payload++ = 0x00;				 // C
-	*p_ble_payload++ = 0x00;				 // W
+	*p_ble_payload++ = r;				 // R
+	*p_ble_payload++ = g;				 // G
+	*p_ble_payload++ = b;				 // B
+	*p_ble_payload++ = cw;				 // C W
+	*p_ble_payload++ = opcode_para->count;	 // 动态码，每按一次加一，大于0xFF后清零重新加
 	*p_ble_payload++ = 0xC0;				 // 客户码，固定
 	*p_ble_payload++ = 0x81;				 // 客户码，固定
 	*p_ble_payload++ = 0x06;				 // 客户码，固定
